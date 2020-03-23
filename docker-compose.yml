@@ -2,13 +2,14 @@ version: '3'
 
 services:
   master:
-    image: actionml/spark:latest
+    image: pacofvf/spark:latest
     command: master
     ports:
       - 8080:8080
-
+      - 7077:7077
+      - 4040:4040
   worker:
-    image: actionml/spark:latest
+    image: pacofvf/spark:latest
     command: worker spark://master:7077
     depends_on:
       - master
@@ -16,3 +17,20 @@ services:
       - 8081:8081
     environment:
       - SPARK_WORKER_MEMORY=1g
+  zeppelin:
+    image: apache/zeppelin:0.8.2
+    container_name: zeppelin
+    depends_on:
+      - master
+    environment:
+      ZEPPELIN_PORT: 8090
+      ZEPPELIN_JAVA_OPTS: >-
+        -Dspark.driver.memory=1g
+        -Dspark.executor.memory=1g
+      MASTER: "spark://master:7077"
+    ports:
+      - 8090:8090
+    volumes:
+      - ./data:/zeppelin/data
+      - ./notebook:/zeppelin/notebook
+      - ./logs:/zeppelin/logs
